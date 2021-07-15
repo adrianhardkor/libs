@@ -17,6 +17,7 @@ import qrcode
 from qrcode.image.pure import PymagingImage
 import base64
 from io import BytesIO
+import lepton
 
 flaskIP = wc.cleanLine(wc.grep('10.88', wc.exec2('ifconfig')))[1]
 # wc.jd(wc.wcheader)
@@ -290,6 +291,14 @@ def flask_AIEngine():
 			else: raw[cmd] = raw[cmd].split('\r\n')
 		return(flask.jsonify(raw)); # {'command': 'output'}
 
+def flask_leptonDash():
+	@Mongo.MONGO.app.route('/woDash', methods = ['GET'])
+	def lepton():
+		args,payload = flaskArgsPayload()
+		L = lepton.LEPTON(wc.env_dict['LEP_IP'], wc.env_dict['LEP_USER'], wc.env_dict['LEP_PASS'])
+		L.INV = L.GetStatus()
+		return(flask.jsonify(L.INV))
+
 # FLASK WEB-API
 def flask_default():
 	@Mongo.MONGO.app.route('/', methods=['GET'])
@@ -307,6 +316,7 @@ if  __name__ == "__main__":
 	flask_validated(); # /validated - get validate results
 	flask_AIS(); # /ais
 	flask_NewCall(); # /new_call
+	flask_leptonDash(); # /woDash
 	flask_RunJenkinsPipeline()
 	flask_qr(); # / qr
 	flask_runtimelogger(); # /runner

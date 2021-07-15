@@ -36,6 +36,7 @@ def FormatJiraRaw(raw):
 
 def get_all_issues(jira_client, project_name, fields):
 	results = {}
+	epics = {}
 	issues = []
 	i = 0
 	chunk_size = 100
@@ -46,22 +47,21 @@ def get_all_issues(jira_client, project_name, fields):
 		issues += chunk.iterable
 		if i >= chunk.total:
 			break
-	wc.jd(fields)
 	for issue in issues:
-		# wc.jd(results[str(issue)])
-		# FormatJiraRaw(results[str(issue)]['raw'])
-		results[str(issue)] = dirClassJIRA(issue.fields)
+		story = str(issue)
+		results[story] = dirClassJIRA(issue.fields)
+		if results[story]['issuetype'] == 'Epic': epics[story] = results.pop(story); continue
 		for field in fields.keys():
 			if fields[field] == -1: continue
-			if field in results[str(issue)].keys():
-				# wc.pairprint(fields[field], results[str(issue)][field])
+			if field in results[story].keys():
 				if type(fields[field]) == list:
 					for f in fields[field]:
-						if f not in results[str(issue)][field]: results.pop(str(issue))
+						if f not in results[story][field]: results.pop(story)
 				else:
-					if fields[field] not in results[str(issue)][field]: results.pop(str(issue))
-			else: results.pop(str(issue))
-	return(results)
+					if fields[field] not in results[story][field]: results.pop(story)
+			else: results.pop(story)
+		if 'customfield_10006' in results[story].keys(): epics[results[story]['customfield_10006']] = results.pop(story)
+	return(epics)
 
 # wc.jd(dirClassJIRA(issue.fields))
 wc.jd(get_all_issues(jira, 'AARC', {'components':wc.argv_dict['components']}))
