@@ -316,6 +316,7 @@ def flask_stcDash():
 		args,payload = flaskArgsPayload()
 		V = velocity.VELOCITY(credsV[0], credsV[1], credsV[2])
 		ResourceTopologies = V.GetTopologiesByResource()
+		# return(flask.jsonify(ResourceTopologies))
 		for N12U in list(ResourceTopologies.keys()):
 			if N12U.startswith('N12U||') is False: ResourceTopologies.pop(N12U)
 			else: ResourceTopologies[N12U.split('|')[-1]] = ResourceTopologies.pop(N12U)

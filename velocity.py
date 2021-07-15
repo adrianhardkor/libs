@@ -219,13 +219,14 @@ class VELOCITY():
 	def GetTopologiesByResource(self):
 		resources = {}
 		tops = self.GetTopologies(resourcesAllTopologies=True)
+		# return(tops)
 		for top in tops.keys():
 			for resource in tops[top]['resources'].keys():
-				wc.pairprint(top, resource)
+				# wc.pairprint(top, resource)
 				if resource not in resources.keys(): resources[resource] = {}
 				resources[resource][top] = {'isShared':tops[top]['resources'][resource]['isShared'], 'activeRes':{}}
 				for att in ['creatorId', 'start', 'end', 'name']:
-					if att in resources[resource][top]['activeRes'].keys():
+					if att in tops[top]['activeRes'].keys():
 						resources[resource][top]['activeRes'][att] = tops[top]['activeRes'][att]
 		return(resources)
 	def ApplyReservationTopology(self, out, ports, p, device):
