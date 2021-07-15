@@ -309,6 +309,26 @@ def flask_leptonDash():
 		return(flask.jsonify(data))
 		# return(flask.jsonify(L.INV['ports']))
 
+def flask_stcDash():
+	@Mongo.MONGO.app.route('/stcDash', methods = ['GET'])
+	def stcInner():
+		credsV = wc.cleanLine(wc.read_file('/opt/velocity'))
+		args,payload = flaskArgsPayload()
+		V = velocity.VELOCITY(credsV[0], credsV[1], credsV[2])
+		data,report = V.RunScript({}, 'TCC3/shared/stc_ports.py', parameters=[{'name':'python_parameter','value':args['chassis']}])
+		raw = json.loads(data['html_report'][-1][8:].replace('\\',''))
+		for attr in list(raw.keys()):
+			if type(raw[attr]) == dict:
+				if 'value' in raw[attr].keys(): raw[attr] = raw[attr]['value']
+		for p in list(raw['ports'].keys()):
+			for attr in list(raw['ports'][p].keys()):
+				if attr not in ['description', 'Port Type', 'Port Speed', 'isLocked', 'isReportedByDriver', 'linkChecked', 'lastModified']:
+					del raw['ports'][p][attr]
+					continue
+				if type(raw['ports'][p][attr]) == dict:
+					if 'value' in raw['ports'][p][attr].keys(): raw['ports'][p][attr] = raw['ports'][p][attr]['value']
+		return(flask.jsonify(  raw ))
+
 # FLASK WEB-API
 def flask_default():
 	@Mongo.MONGO.app.route('/', methods=['GET'])
@@ -327,6 +347,7 @@ if  __name__ == "__main__":
 	flask_AIS(); # /ais
 	flask_NewCall(); # /new_call
 	flask_leptonDash(); # /woDash
+	flask_stcDash(); # stcDash
 	flask_RunJenkinsPipeline()
 	flask_qr(); # / qr
 	flask_runtimelogger(); # /runner

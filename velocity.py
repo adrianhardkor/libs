@@ -185,7 +185,7 @@ class VELOCITY():
 			out[p['id']] = p
 			out[p['id']]['display'] = "%s (%s)" % (p['name'], p['login'])
 		return(out)
-	def GetTopologies(self):
+	def GetTopologies(self,resourcesAllTopologies=False):
 		out = {}
 		top = VELOCITY.REST_GET(self, '/velocity/api/topology/v12/topologies', list_attr='topologies')['topologies']
 		res = VELOCITY.REST_GET(self, '/velocity/api/reservation/v16/reservations', params={'filter': 'status::ACTIVE'}, list_attr='items')['items']
@@ -200,8 +200,8 @@ class VELOCITY():
 			t['resources'] = {}
 			t['activeRes'] = {}
 			out[t['name']] = t
-			if t['id'] in activeRes.keys():
-				out[t['name']]['activeRes'] = activeRes[t['id']]
+			if t['id'] in activeRes.keys() or resourcesAllTopologies == True:
+				if t['id'] in activeRes.keys(): out[t['name']]['activeRes'] = activeRes[t['id']]
 				resources = VELOCITY.REST_GET(self, '/velocity/api/topology/v12/topology/%s/resources' % t['id'], list_attr='items')
 				for resource in resources['items']:
 					if 'parentName' not in resource.keys(): wc.jd(resource)
@@ -209,13 +209,26 @@ class VELOCITY():
 						out[t['name']]['resources'][resource['name']] = resource
 					else:
 						out[t['name']]['resources'][resource['parentName'] + '||' + resource['name']] = resource
-
-				out[t['name']]['activeRes']['creatorId'] = users[out[t['name']]['activeRes']['creatorId']]['display']
-				out[t['name']]['activeRes']['ownerId'] = users[out[t['name']]['activeRes']['ownerId']]['display']
+				if t['id'] in activeRes.keys():
+					out[t['name']]['activeRes']['creatorId'] = users[out[t['name']]['activeRes']['creatorId']]['display']
+					out[t['name']]['activeRes']['ownerId'] = users[out[t['name']]['activeRes']['ownerId']]['display']
 			out[t['name']]['creatorId'] = users[out[t['name']]['creatorId']]['display']
 			out[t['name']]['lastModifierId'] = users[out[t['name']]['lastModifierId']]['display']
 		self.ALL_TOPOLOGIES = out
 		return(out)
+	def GetTopologiesByResource(self):
+		resources = {}
+		tops = self.GetTopologies(resourcesAllTopologies=True)
+		return(tops)
+		for top in tops.keys():
+			for resource in tops[top]['resources'].keys():
+				wc.pairprint(top, resource)
+				if resource not in resources.keys(): resources[resource] = {}
+				resources[resource][top] = {'isShared':tops[top]['resources'][resource]['isShared'], 'activeRes':{}}
+				for att in ['creatorId', 'start', 'end', 'name']:
+					if att in resources[resource][top]['activeRes'].keys():
+						resources[resource][top]['activeRes'][att] = tops[top]['activeRes'][att]
+		return(resources)
 	def ApplyReservationTopology(self, out, ports, p, device):
 		top = self.ALL_TOPOLOGIES
 		# wc.jd(top)

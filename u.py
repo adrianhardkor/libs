@@ -12,10 +12,8 @@ import concurrent.futures
 
 import velocity
 V = velocity.VELOCITY(wc.argv_dict['IP'], user=wc.argv_dict['user'], pword=wc.argv_dict['pass'])
-data,report = V.RunScript(V.GetInventory(), 'TCC3/shared/stc_ports.py', parameters=[{'name':'python_parameter','value':'N12U'}])
-
-print('\n\n\n\n')
-wc.jd(json.loads(data['html_report'][-1][8:].replace('\\','')))
+V.INV = V.GetInventory()
+wc.jd(V.GetTopologiesByResource())
 exit()
 
 
