@@ -293,11 +293,21 @@ def flask_AIEngine():
 
 def flask_leptonDash():
 	@Mongo.MONGO.app.route('/woDash', methods = ['GET'])
-	def lepton():
+	def leptonInner():
+		credsL = wc.cleanLine(wc.read_file('/opt/lepton')); # printenv not working?
+		credsV = wc.cleanLine(wc.read_file('/opt/velocity'))
 		args,payload = flaskArgsPayload()
-		L = lepton.LEPTON(wc.env_dict['LEP_IP'], wc.env_dict['LEP_USER'], wc.env_dict['LEP_PASS'])
+		L = lepton.LEPTON(credsL[0], credsL[1], credsL[2])
 		L.INV = L.GetStatus()
-		return(flask.jsonify(L.INV))
+		V = velocity.VELOCITY(credsV[0], credsV[1], credsV[2])
+		V.CONNECTIONS = V.GetConnections({'Connections':'Only'})
+		# return(flask.jsonify(V.CONNECTIONS))
+		data = lepton.FormatLeptonDashboard(L.INV)
+		for p in data.keys():
+			wc.pairprint(p, wc.lsearchAllInline2('lepton01_*', list(V.CONNECTIONS.keys())))
+			if 'lepton01_' + str(p) in V.CONNECTIONS.keys():  data[p]['Velocity'] = V.CONNECTIONS['lepton01_' + p]
+		return(flask.jsonify(data))
+		# return(flask.jsonify(L.INV['ports']))
 
 # FLASK WEB-API
 def flask_default():

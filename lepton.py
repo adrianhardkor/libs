@@ -90,6 +90,32 @@ class LEPTON():
 			# print(_P)
 		return(out)
 
+def FormatByType(input1):
+	if type(input1) in [str, int]: return(input1)
+	elif type(input1) == list:
+		if len(input1) == 1: return(input1[0])
+		else: return(str(input1))
+
+def FormatLeptonDashboard(LINV):
+	result = {}
+	for lPort in LINV['ports']:
+		result[lPort] = {'Description':'','PhyLink':'','Protocol':'','MAP':'','Model':'', 'Sfp':{}, 'Velocity':''}
+		if 'MAP' in LINV['ports'][lPort].keys():
+			result[lPort]['MAP'] = list(LINV['ports'][lPort]['MAP'].keys())[0]
+		result[lPort]['Model'] = LINV['ports'][lPort]['linecard']['Model']
+		for top in ['Description', 'PhyLink', 'Protocol','ModulePresent','Speed']:
+			result[lPort][top] = FormatByType(LINV['ports'][lPort][top])
+		if result[lPort]['ModulePresent']:
+			if 'Sfp' in LINV['ports'][lPort].keys(): sfpType = 'Sfp'
+			else: sfpType = 'Qsfp'
+			for top2 in ['VendorName', 'VendorPartNumber', 'TxPower', 'RxPower']:
+				result[lPort]['Sfp'][top2] = FormatByType(LINV['ports'][lPort][sfpType][top2])
+				flags = []
+				for flag in ['RxLOL', 'RxLOS', 'TxDisable', 'TxFault', 'TxLOL', 'TxLOS','ModuleReady']:
+					if FormatByType(LINV['ports'][lPort][sfpType][flag]): flags.append(flag)
+				result[lPort]['Sfp']['flags'] = str(flags)
+	return(result)
+
 #{'Port': '2.63', 'Mode': 'Online', 'PhyLink': ['NUL'], 'Ingress': [], 'Egress': []}
 #{'Port': '2.64', 'Mode': 'Online', 'PhyLink': ['NUL'], 'Ingress': [], 'Egress': []}
 #{'Port': '3.1', 'Mode': 'Online', 'PhyLink': ['UP', 'UP', 'UP', 'UP'], 'Ingress': ['3.2'], 'Egress': [['3.2']]}

@@ -606,11 +606,17 @@ class VELOCITY():
 		# IF SUCCESS: ADD TO V.INV  
 		self.INV[device1]['ports'][port1]['connections'][connection_name] = connection_name.split('__')[0]
 		self.INV[device2]['ports'][port2]['connections'][connection_name] = connection_name.split('__')[1]
+		# self.CONNECTIONS[device1 + '_' + port1] = {'device':device2,'port':port2}
+		# self.CONNECTIONS[device2 + '_' + port2] = {'device':device1,'port':port1}
 	def GetConnections(self, out):
+		self.CONNECTIONS = {}
 		# PHYSICAL CONNECTIONS, USED FOR TOPOLOGY ABSTRACTION
 		physical = self.REST_GET('/velocity/api/inventory/v14/physical_connections', list_attr='connections')['connections']
 		for p in physical:
 			connection_name = '_'.join([p['device1']['name'],p['port1']['name'],'',p['device2']['name'],p['port2']['name']])
+			self.CONNECTIONS[p['device1']['name'] + '_' + p['port1']['name']] = {'device':p['device2']['name'],'port':p['port2']['name']}
+			self.CONNECTIONS[p['device2']['name'] + '_' + p['port2']['name']] = {'device':p['device1']['name'],'port':p['port1']['name']}
+			if out == {'Connections':'Only'}: continue;
 			# print(connection_name)
 			value = {}
 			value['cableType'] = p['cableType']
@@ -621,6 +627,7 @@ class VELOCITY():
 			if p['port2']['name'] not in out[p['device2']['name']]['ports'].keys(): wc.pairprint('len2', len(out[p['device2']['name']]['ports'].keys()))
 			out[p['device1']['name']]['ports'][p['port1']['name']]['connections'][connection_name] = value
 			out[p['device2']['name']]['ports'][p['port2']['name']]['connections'][connection_name] = value
+		if out == {'Connections':'Only'}: return(self.CONNECTIONS)
 		return(out)
 	def GetInventory(self):
 		self.DelAllMessages()
