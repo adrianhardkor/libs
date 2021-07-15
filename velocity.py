@@ -219,7 +219,6 @@ class VELOCITY():
 	def GetTopologiesByResource(self):
 		resources = {}
 		tops = self.GetTopologies(resourcesAllTopologies=True)
-		return(tops)
 		for top in tops.keys():
 			for resource in tops[top]['resources'].keys():
 				wc.pairprint(top, resource)

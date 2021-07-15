@@ -12,7 +12,7 @@ import concurrent.futures
 
 import velocity
 V = velocity.VELOCITY(wc.argv_dict['IP'], user=wc.argv_dict['user'], pword=wc.argv_dict['pass'])
-V.INV = V.GetInventory()
+# V.INV = V.GetInventory()
 wc.jd(V.GetTopologiesByResource())
 exit()
 

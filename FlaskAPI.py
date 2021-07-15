@@ -315,6 +315,10 @@ def flask_stcDash():
 		credsV = wc.cleanLine(wc.read_file('/opt/velocity'))
 		args,payload = flaskArgsPayload()
 		V = velocity.VELOCITY(credsV[0], credsV[1], credsV[2])
+		ResourceTopologies = V.GetTopologiesByResource()
+		for N12U in list(ResourceTopologies.keys()):
+			if N12U.startswith('N12U||') is False: ResourceTopologies.pop(N12U)
+			else: ResourceTopologies[N12U.split('|')[-1]] = ResourceTopologies.pop(N12U)
 		data,report = V.RunScript({}, 'TCC3/shared/stc_ports.py', parameters=[{'name':'python_parameter','value':args['chassis']}])
 		raw = json.loads(data['html_report'][-1][8:].replace('\\',''))
 		for attr in list(raw.keys()):
@@ -327,6 +331,8 @@ def flask_stcDash():
 					continue
 				if type(raw['ports'][p][attr]) == dict:
 					if 'value' in raw['ports'][p][attr].keys(): raw['ports'][p][attr] = raw['ports'][p][attr]['value']
+			if p in ResourceTopologies.keys():
+				raw['ports'][p]['Velocity_Topologies'] = ResourceTopologies[p]
 		return(flask.jsonify(  raw ))
 
 # FLASK WEB-API
