@@ -60,10 +60,10 @@ def get_all_issues(jira_client, project_name, fields):
 				else:
 					if fields[field] not in results[story][field]: results.pop(story)
 			else: results.pop(story)
-		if 'customfield_10006' in results[story].keys(): epics[results[story]['customfield_10006']] = results.pop(story)
-	return(epics)
+		# if 'customfield_10006' in results[story].keys(): epics[results[story]['customfield_10006']] = results.pop(story)
+	return(results)
 
 # wc.jd(dirClassJIRA(issue.fields))
-wc.jd(get_all_issues(jira, 'AARC', {'components':wc.argv_dict['components']}))
+wc.jd(get_all_issues(jira, wc.argv_dict['board'], {'components':wc.argv_dict['components']}))
 # ['id','labels','issuetype','priority']))
 
