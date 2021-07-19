@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import wcommon as wc
 from __future__ import print_function
 import datetime
 import os.path
@@ -7,16 +6,18 @@ from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
+import wcommon as wc
+import pickle
 
 # If modifying these scopes, delete the file token.json.
 SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
 
 class GCAL():
-	def __init__(self, CALENDAR_ID, SCOPES, PICKLE_TOKEN_FILE, CREDS):
+	def __init__(self, CALENDAR_ID, SCOPES, PICKLE_TOKEN_FILE, creds_json):
 		self.CALENDAR_ID = CALENDAR_ID
 		self.SCOPES = SCOPES
 		self.PICKLE_TOKEN_FILE = PICKLE_TOKEN_FILE
-		self.CREDS = CREDS
+		self.creds_json = creds_json
 
 	def Connect(self):
 		connect = wc.timer_index_start()
@@ -33,6 +34,19 @@ class GCAL():
 			# Save the credentials for the next run
 			with open(self.PICKLE_TOKEN_FILE, 'wb') as token:
 				pickle.dump(creds, token)
+		self.service = build('calendar', 'v3', credentials=creds)
+		return(self.service)
+	def GET_CAL(self, calendarId):
+		now = datetime.datetime.utcnow().isoformat() + 'Z' # 'Z' indicates UTC time
+		events_result = self.service.events().list(calendarId=calendarId, timeMin=now, maxResults=365, singleEvents=True, orderBy='startTime').execute()
+		events = events_result.get('items', [])
+		return(events)
+
+
+CAL = GCAL('', SCOPES, '/opt/google/cal.pickle', '/opt/google/credentials.json')
+CAL.Connect()
+data = CAL.GET_CAL('c_mssn01vn2ualcgtf1l4ugjtqe4')
+wc.jd(data)
 	
 #def main():
 #    """Shows basic usage of the Google Calendar API.
