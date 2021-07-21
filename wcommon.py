@@ -1487,7 +1487,13 @@ def validateITSM(fname_list, uuid, directory='', CIDR='10.88.0.0/16'):
 	data = getFnameScaffolding(fname_list,uuid,directory=directory)
 	result,AIE_check = validateSUB(list(data.keys()), data, Duplicates, {}, CIDR)
 	for per_setting in AIE_check.keys():
-		cmds = json.loads(REST_GET('https://pl-acegit01.as12083.net/wopr/validateDCIM/raw/master/%s.j2' % per_setting))['response.body'].split('\n')
+		
+		cmds = json.loads(REST_GET('https://pl-acegit01.as12083.net/wopr/validateDCIM/raw/master/%s.j2' % per_setting))
+		if 'reponse.body' in cmds.keys(): cmds = cmds['response.body'].split('\n')
+		else:
+			print(per_setting)
+			print(cmds)
+			cmds = cmds['response.body']
 		multi = MULTIPROCESS(AIEmulti, list(AIE_check[per_setting].keys()), {'settings':per_setting, 'cmds':cmds}, processes=8)
 		batchTime = multi.pop('timer')
 		for ip in multi.keys():
