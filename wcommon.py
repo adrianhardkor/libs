@@ -1488,7 +1488,7 @@ def validateITSM(fname_list, uuid, directory='', CIDR='10.88.0.0/16'):
 	result,AIE_check = validateSUB(list(data.keys()), data, Duplicates, {}, CIDR)
 	for per_setting in AIE_check.keys():
 		
-		cmds = json.loads(REST_GET('https://pl-acegit01.as12083.net/wopr/validateDCIM/raw/master/%s.j2' % per_setting))
+		cmds = json.loads(REST_GET('https://pl-acegit01.as12083.net/wopr/validateDCIM/raw/master/%s.j2' % per_setting.strip()))
 		if 'reponse.body' in cmds.keys(): cmds = cmds['response.body'].split('\n')
 		else:
 			print(per_setting)
