@@ -25,10 +25,11 @@ options = {
 
 jira = JIRA(options, basic_auth=(user,apikey) )
 
-if 'ticket' in wc.argv_dict.keys():
-	ticket = wc.argv_dict['ticket']
+def ByTicket(ticket):
+	# ticket = wc.argv_dict['ticket']
 	issue = jira.issue(ticket)
-	wc.jd(dirClassJIRA(issue.fields)); exit()
+	data = dirClassJIRA(issue.fields)
+	return(data)
 
 def FormatJiraRaw(raw):
 	wc.jd(wc.mcsplit(raw, ['{"','"}']))
@@ -60,10 +61,10 @@ def get_all_issues(jira_client, project_name, fields):
 				else:
 					if fields[field] not in results[story][field]: results.pop(story)
 			else: results.pop(story)
-		# if 'customfield_10006' in results[story].keys(): epics[results[story]['customfield_10006']] = results.pop(story)
-	return(results)
+		if 'customfield_10006' in results[story].keys(): epics[results[story]['customfield_10006']] = results.pop(story)
+	return(epics)
 
 # wc.jd(dirClassJIRA(issue.fields))
-wc.jd(get_all_issues(jira, wc.argv_dict['board'], {'components':wc.argv_dict['components']}))
+# wc.jd(get_all_issues(jira, 'AARC', {'components':wc.argv_dict['components']}))
 # ['id','labels','issuetype','priority']))
 

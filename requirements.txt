@@ -24,3 +24,4 @@ deepdiff
 flask_debug
 cffi
 pysnmp
+jira

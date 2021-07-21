@@ -125,7 +125,20 @@ def flask_validated():
 	def validated():
 		args,payload = flaskArgsPayload()
 		branch = args['branch']
-		return(flask.jsonify(Mongo.MONGO._GETJSON(Mongo.validationDevice, criteria={'branch':branch})))
+		if branch.lower() not in ['main', 'master']:
+			return(flask.jsonify(Mongo.MONGO._GETJSON(Mongo.validationDevice, criteria={'branch':branch})))
+		else:
+			headers = {'PRIVATE-TOKEN': 'hWfVZcD71VgDMcpzZhK7'}
+			results = []
+			devices = json.loads(wc.REST_GET('https://pl-acegit01.as12083.net/api/v4/projects/300/repository/tree?ref=master', headers=headers))
+			for d in devices:
+				# https://pl-acegit01.as12083.net/arc-lab/asset-data/raw/master/23dbc8f8-c4e0-4c21-8be5-0335e43ad344.dcim.yml
+				if d['path'].endswith('.dcim.yml') is False: continue
+				blob_id = json.loads(wc.REST_GET('https://pl-acegit01.as12083.net/api/v4/projects/300/repository/files/' + d['path'] + '?ref=master', headers=headers))['blob_id']
+				wc.log_fname(json.loads(wc.REST_GET('https://pl-acegit01.as12083.net/api/v4/projects/300/repository/blobs/' + blob_id + '/raw', headers=headers))['response.body'], './data.yml')
+				data = wc.read_yaml('./data.yml')
+				results.append({d['path']: data})
+			return(flask.jsonify(results))
 
 def flask_validate():
 	@Mongo.MONGO.app.route('/validate', methods = ['GET'])
