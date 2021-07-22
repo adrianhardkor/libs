@@ -798,7 +798,7 @@ def mgmt_login_paramiko(ip, username, driver, quiet, password='', key_fname='', 
             pairprint('CLOSED', e2)
         attempts += 1
 
-    if attempts >= total_attempts: login_err = str(ee) + ' - couldnt connect to ' + ip; return(-1,{'login_err':login_err})
+    if attempts >= total_attempts: login_err = str(ee) + ' - couldnt connect to ' + ip + ':    ' + str(connect_settings); return(-1,{'login_err':login_err})
     print('Connection Built.. DONE:%s @ %s' % (timer_index_since(login_time), timer_index_since(wow_time)))    
     remote_conn = remote_conn_pre.invoke_shell()
     time.sleep(0.1)
