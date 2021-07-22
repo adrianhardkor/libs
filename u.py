@@ -10,6 +10,7 @@ import time
 import requests
 import concurrent.futures
 
+wc.jd(json.loads(wc.read_file('/opt/FlaskAPI/validateDCIM/_logic/tmp.json'))); exit()
 
 wc.jd(wc.PARA_CMD_LIST(ip='10.88.241.7', commands=['show interface all status', 'show port async all status'], driver='mrvTS', username='arcadmin', password='arcaccess', become='arcenable', quiet=False,ping=False,windowing=True, settings_prompt="([a-zA-Z0-9\-\_]+[0-9\:\ ]+[>])", buffering=['no pause'], exit=['exit']))
 
