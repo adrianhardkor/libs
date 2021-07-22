@@ -819,14 +819,16 @@ def mgmt_login_paramiko(ip, username, driver, quiet, password='', key_fname='', 
 def prompt_check(output, remote_conn, IP, prompt_status, quiet):
     last_line = output.split('\n')
     # print("prompt_check '%s'" % last_line[-1])
-    print('.', end='')
+    # print('.', end='')
     if string_match("assword", last_line[-1]):
         global passwords
         password = passwords[IP]
+        time.sleep(0.01)
         remote_conn.send(password)
         time.sleep(0.03)
-        remote_conn.send('\n')
+        remote_conn.send('\r')
         print('PASSWORD FOUND: %s' % last_line[-1])
+        print(password)
 
 def paramiko_ready(remote_conn, command, quiet, check):
     time.sleep(.4)

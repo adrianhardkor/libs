@@ -23,8 +23,8 @@ ruckus:
   buffering: 'en,skip-page-display'
   exit: "exit,exit"
 lx:
-  username: "arcuser"
-  private_key_file: "/opt/lx.arcuser.txt"
+  username: "arcadmin"
+  private_key_file: "/opt/lx.txt"
   ansible_ssh_common_args: '-okexalgorithms=+diffie-hellman-group1-sha1 '
   vendor: 'mrvTS'
   prompt: "([a-zA-Z0-9\-\_]+[0-9\:\ ]+[>])"
