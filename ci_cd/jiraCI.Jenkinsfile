@@ -2,7 +2,6 @@ node() {
     def STC_INSTALL = "/opt/STC_CLIENT/Spirent_TestCenter_5.16/Spirent_TestCenter_Application_Linux64Client/"
     def os = System.properties['os.name'].toLowerCase()
     try {
-        notifyBuild('STARTED')
         def passthruString = sh(script: "printenv", returnStdout: true)
         passthruString = passthruString.replaceAll('\n',' ').trim()
         def paramsString1 = params.toString().replaceAll("[\\[\\](){}]","")
