@@ -10,6 +10,55 @@ import time
 import requests
 import concurrent.futures
 
+
+attempt = {}
+attempt['1show interface all status'] = '''arcadmin:0 >>show interface all status
+ Time:                                   Mon, 08 Feb 2016 09:30:15 US/Eastern
+ Interface Name:           Interface_1  Bound to:                        eth0
+ IP Address:               10.88.241.7  IP Mask:                255.255.248.0
+ IP Broadcast Addr:      10.88.247.255  Learned from:            User Defined
+ DHCP Status:                     Idle  DHCP Lease Server:
+ DHCP Lease Expiration:                                                 Never
+arcadmin:0 >>'''.split('\n')
+
+
+
+sortedby = ''
+# sortby = 'Port Number'
+sortby = 'Bound to'
+result = {}
+
+# duplicate timestamp at end
+attempt['1show interface all status'].insert(-1, attempt['1show interface all status'][1])
+for line1 in attempt['1show interface all status']:
+	if '>>' in line1: continue
+	if line1.strip().startswith('Time:'):
+		if sortedby != '': result[sortedby] = port
+		port = {}; sortedby = ''
+		port['Time'] = ':'.join(line1.split(':')[1:]).strip()
+		continue
+	for colum in [line1[:40], line1[40:]]:
+		colum = colum.split(':')
+		if len(colum) < 2: continue
+		port[colum[0].strip()] = ':'.join(colum[1:]).strip()
+		if colum[0].strip() == sortby: sortedby = ':'.join(colum[1:]).strip()
+
+wc.jd(result)
+exit()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import velocity
 V = velocity.VELOCITY(wc.argv_dict['IP'], user=wc.argv_dict['user'], pword=wc.argv_dict['pass'])
 # V.INV = V.GetInventory()

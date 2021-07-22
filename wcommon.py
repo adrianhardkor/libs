@@ -1460,10 +1460,38 @@ def AIEmulti(ip, settings, cmds):
 			except Exception as err:
 				add[line10[7].split('/')[0]] = str(err)
 				pass
+	elif settings == 'lx':
+		if '1show interface all status' not in attempt.keys() or '2show port async all status' not in attempt.keys():
+			return({'attempt':attempt,'works':attempt,'intf':intf,'add':add})
+		eth = LX_formatter(attempt['1show interface all status'], 'Bound to')
+		intf = LX_formatter(attempt['2show port intf all status'], 'Port Number')
+		for e in eth.keys():
+			if 'IP Address' in eth[e].keys(): add[eth[e]['IP Address']] = e; #IP=name
+			intf[e] = eth.pop(e)
 	else:
 		intf[settings] = add[settings] = 'not parsed'
 		works = "false_vendor_not_coded"
 	return({'attempt':attempt,'works':works,'intf':intf,'add':add})
+
+def LX_formatter(datalist, sortby):
+	sortedby = ''
+	result = {}
+	datalist.insert(-1, datalist[1]); # duplicate timestamp at end
+	for line1 in datalist:
+		if '>>' in line1: continue
+		if line1.strip().startswith('Time:'):
+			if sortedby != '': result[sortedby] = port
+			port = {}; sortedby = ''
+			port['Time'] = ':'.join(line1.split(':')[1:]).strip()
+			continue
+		for colum in [line1[:40], line1[40:]]:
+			colum = colum.split(':')
+			if len(colum) < 2: continue
+			port[colum[0].strip()] = ':'.join(colum[1:]).strip()
+			if colum[0].strip() == sortby: sortedby = ':'.join(colum[1:]).strip()
+	return(result)
+
+
 
 def LoadMasterDevices4Duplicates(path):
 	global Duplicates
@@ -1488,12 +1516,7 @@ def validateITSM(fname_list, uuid, directory='', CIDR='10.88.0.0/16'):
 	result,AIE_check = validateSUB(list(data.keys()), data, Duplicates, {}, CIDR)
 	for per_setting in AIE_check.keys():
 		
-		cmds = json.loads(REST_GET('https://pl-acegit01.as12083.net/wopr/validateDCIM/raw/master/%s.j2' % per_setting.strip()))
-		if 'reponse.body' in cmds.keys(): cmds = cmds['response.body'].split('\n')
-		else:
-			print(per_setting)
-			print(cmds)
-			cmds = cmds['response.body']
+		cmds = json.loads(REST_GET('https://pl-acegit01.as12083.net/wopr/validateDCIM/raw/master/%s.j2' % per_setting.strip()))['response.body'].split('\n')
 		multi = MULTIPROCESS(AIEmulti, list(AIE_check[per_setting].keys()), {'settings':per_setting, 'cmds':cmds}, processes=8)
 		batchTime = multi.pop('timer')
 		for ip in multi.keys():

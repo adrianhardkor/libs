@@ -276,7 +276,7 @@ def flask_AIEngine():
 		paramiko_args['driver'] = settings['vendor']
 		paramiko_args['username'] = settings['username']
 		paramiko_args['ping'] = False
-		paramiko_args['quiet'] = True
+		paramiko_args['quiet'] = False
 		if 'buffering' in settings.keys(): paramiko_args['buffering'] = settings['buffering'].split(',')
 		if 'exit' in settings.keys():
 			for e in settings['exit'].split(','):
