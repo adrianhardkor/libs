@@ -18,7 +18,7 @@ class XRAY():
 		self.headers = {'Content-Type':'application/json', 'Authentication': 'Bearer ' + str(data)}
 		return(data)
 	def ImportCucumber(self, cucumber):
-		data = wc.REST_POST(self.BASEURL + '/api/v2/import/execution/cucumber', verify=False, headers=self.headers, data=json.dumps(cucumber))
+		data = wc.REST_POST(self.BASEURL + '/api/v2/import/execution/cucumber', verify=False, headers=self.headers, args=json.dumps(cucumber))
 		wc.jd(data)
 		return(data)
 
