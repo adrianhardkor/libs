@@ -23,7 +23,7 @@ node() {
             env.BUILD_TIME = "${BUILD_TIMESTAMP}"
             echo "Workspace set to:" + env.WORKSPACE_LOCAL
             echo "Build time:" + env.BUILD_TIME
-            def passthruString = sh(script: "echo ${env.cucumber} >> cucumber.json", returnStdout: true)
+            def blahh = sh(script: "echo ${env.cucumber} >> cucumber.json", returnStdout: true)
             cucumber buildStatus: "UNSTABLE",
             fileIncludePattern: "cucumber.json",
             jsonReportDirectory: 'reports'
