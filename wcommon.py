@@ -816,19 +816,22 @@ def mgmt_login_paramiko(ip, username, driver, quiet, password='', key_fname='', 
     result['_']['login'] = login_diff
     return(remote_conn,result)
 
-def prompt_check(output, remote_conn, IP, prompt_status, quiet):
+def prompt_check(output, remote_conn, IP, quiet):
+    global only_once
     last_line = output.split('\n')
     # print("prompt_check '%s'" % last_line[-1])
     # print('.', end='')
-    if string_match("assword", last_line[-1]):
+    if string_match("assword", last_line[-1]) and only_once == True:
+        only_once = False
         global passwords
         password = passwords[IP]
         time.sleep(0.01)
         remote_conn.send(password)
         time.sleep(0.03)
-        remote_conn.send('\r')
+        # remote_conn.send('\r')
         print('PASSWORD FOUND: %s' % last_line[-1])
-        print(password)
+        return(True)
+    return(False)
 
 def paramiko_ready(remote_conn, command, quiet, check):
     time.sleep(.4)
@@ -845,6 +848,8 @@ def paramiko_send_expect(PARAresult, commands, IP, remote_conn, driver, quiet, e
     global sleep_interval
     global prompt
     global paramiko_buffer
+    global only_once
+    only_once = True
     thisPrompt = '.*%s$' % prompt[driver]
     regexPrompt = re.compile(thisPrompt)
     closedPrompt = re.compile('.* closed.')
@@ -854,23 +859,24 @@ def paramiko_send_expect(PARAresult, commands, IP, remote_conn, driver, quiet, e
         timer_index_start()
         output = ''
         check = 1
-        if string_match('enable', command): check = 1
-
-        remote_conn.send(command + '\n')
+        if command.startswith('en'):
+            remote_conn.send(command + '\r')
+            if prompt_check(output, remote_conn, IP, quiet):
+                # PASSWORD FOUND
+                remote_conn.send('\n')
+                output += bytes_str(remote_conn.recv(4096))
+                remote_conn.send('\r')
+                # output += bytes_str(remote_conn.recv(4096))
+                if not quiet: print(output)
+        else: remote_conn.send(command + '\r')
         time.sleep(.6)
-        paramiko_ready(remote_conn, command, quiet, check)
+        # paramiko_ready(remote_conn, command, quiet, check)
         exits = 0
         prompt_status = regexPrompt.search(output)
         while prompt_status is None and closedPrompt.search(output) is None:
-            if check: prompt_check(output, remote_conn, IP, prompt_status, quiet)
-            #    while self.shell.recv_ready():
-            #       response += self.shell.recv(4096).decode('utf-8').encode('utf-8')
             buff = ''
             while remote_conn.recv_ready():
                 buff += bytes_str(remote_conn.recv(4096))
-            # buff = remote_conn.recv(paramiko_buffer)
-            # if not quiet: print(exits); print(command); print(buff); print(bytes_str(buff)); print(str(exit) + '\n');
-            # buff = bytes_str(buff)
             output += buff
             if command.strip() in exit and buff == '':
                 if exits >= 3:
