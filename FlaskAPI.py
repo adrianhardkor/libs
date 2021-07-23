@@ -18,6 +18,7 @@ from qrcode.image.pure import PymagingImage
 import base64
 from io import BytesIO
 import lepton
+import gitlabAuto
 
 flaskIP = wc.cleanLine(wc.grep('10.88', wc.exec2('ifconfig')))[1]
 # wc.jd(wc.wcheader)
@@ -123,12 +124,28 @@ def flask_RunJenkinsPipeline():
 def flask_validated():
 	@Mongo.MONGO.app.route('/validated', methods = ['GET'])
 	def validated():
+		headers = {'PRIVATE-TOKEN': 'hWfVZcD71VgDMcpzZhK7'}
+		timer = wc.timer_index_start()
 		args,payload = flaskArgsPayload()
 		branch = args['branch']
 		if branch.lower() not in ['main', 'master']:
 			return(flask.jsonify(Mongo.MONGO._GETJSON(Mongo.validationDevice, criteria={'branch':branch})))
 		else:
-			headers = {'PRIVATE-TOKEN': 'hWfVZcD71VgDMcpzZhK7'}
+			# main/master = INVENTORY PAGE DASHBOARD
+			G = gitlabAuto.GITLAB('https://pl-acegit01.as12083.net/', headers['PRIVATE-TOKEN'], 300)
+			results = G.GetFiles('asset-data/')
+			for disregard in ['.gitlab-ci.yml', 'online']:
+				if disregard in results.keys(): del results[disregard]
+			result = []
+			for kk in list(results.keys()):
+				try:
+					results[kk]['uuid'] = str(kk)
+				except Exception:
+					pass
+				result.append(results[kk])
+			# results['_'] = wc.timer_index_since(timer)
+			return(flask.jsonify(result))
+
 			results = []
 			devices = json.loads(wc.REST_GET('https://pl-acegit01.as12083.net/api/v4/projects/300/repository/tree?ref=master', headers=headers))
 			for d in devices:
@@ -138,6 +155,7 @@ def flask_validated():
 				wc.log_fname(json.loads(wc.REST_GET('https://pl-acegit01.as12083.net/api/v4/projects/300/repository/blobs/' + blob_id + '/raw', headers=headers))['response.body'], './data.yml')
 				data = wc.read_yaml('./data.yml')
 				results.append({d['path']: data})
+			results.append({'_timer': str(wc.timer_index_since(timer))})
 			return(flask.jsonify(results))
 
 def flask_validate():

@@ -43,7 +43,7 @@ class GITLAB():
 
 		return(results)
 
-G = GITLAB('https://pl-acegit01.as12083.net/', wc.env_dict['GITLAB_TOKEN'], 300)
-wc.jd(G.GetFiles('asset-data/'))
-print(wc.timer_index_since(timer))
+# G = GITLAB('https://pl-acegit01.as12083.net/', wc.env_dict['GITLAB_TOKEN'], 300)
+# wc.jd(G.GetFiles('asset-data/'))
+# print(wc.timer_index_since(timer))
 

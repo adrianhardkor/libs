@@ -1318,6 +1318,7 @@ def getFnameScaffolding(fname_list, uuid='', directory=''):
 global cllis
 global Duplicates
 global UUIDS
+global validate
 
 def lowerDictKeys(mydict):
 	for k in dict(mydict).keys():

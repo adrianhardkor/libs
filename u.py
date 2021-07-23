@@ -9,6 +9,8 @@ import time
 
 import requests
 import concurrent.futures
+import yaml
+print(yaml.dump(json.loads(wc.read_file('/opt/FlaskAPI/validateDCIM/_logic/tmp.json')))); exit()
 
 wc.jd(json.loads(wc.read_file('/opt/FlaskAPI/validateDCIM/_logic/tmp.json'))); exit()
 
