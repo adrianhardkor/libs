@@ -972,7 +972,7 @@ def is_pingable(IP):
             result = False
     return(result)
 
-def PARA_CMD_LIST(ip='', commands=[], driver='', username='', password='', become='', key_fname='', quiet=False,ping=True,windowing=True, settings_prompt='', buffering='', exit=[]):
+def PARA_CMD_LIST_old(ip='', commands=[], driver='', username='', password='', become='', key_fname='', quiet=False,ping=True,windowing=True, settings_prompt='', buffering='', exit=[]):
     global passwords
     try:
         passwords[ip] = become; # BECOME = priv15 is global 
@@ -1149,6 +1149,126 @@ def REST_UPLOAD(url, fname, DB=''):
 	pairprint('[INFO] ', payload)
 	data2 = requests.post(url, files=files, data=payload, verify=False)
 	return(json.dumps({'response': str(data2)}))
+
+def NON_WINDOWING_PARAMIKO(ip, username, password, key_fname, commands):
+    c = paramiko.SSHClient()
+    c.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    if key_fname != '':
+        k = paramiko.RSAKey.from_private_key_file(key_fname)
+        c.connect( hostname = ip, username = username, pkey = k )
+    else:
+        c.connect( hostname=ip, username=username, password=password)
+    o = []
+    for command in commands:
+        stdin , stdout, stderr = c.exec_command(command)
+        o.append(bytes_str(stdout.read()))
+    c.close()
+    return(o)
+
+
+def mgmt_login(ip, username, password, become, key_fname, ping):
+        timer = timer_index_start()
+        attempts = 1
+        connected = ''
+        errs = []
+        if ping:
+                ping_result = is_pingable(ip)
+                if not quiet: print(ping_result)
+                if ping_result == False: login_err = 'ping:' + str(ping_result); return(-1,{'login_err':login_err},timer)
+        connect_settings = {'hostname':ip, 'port':'22', 'username':str(username), 'look_for_keys':False, 'allow_agent':False, 'banner_timeout':600, 'timeout':10}
+        if key_fname != '': connect_settings['pkey'] = paramiko.RSAKey.from_private_key_file(key_fname)
+        else: connect_settings['password'] = password
+        while attempts <= 2:
+                remote_conn = paramiko.SSHClient()
+                remote_conn.load_system_host_keys()
+                remote_conn.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                try:
+                        connected = remote_conn.connect(**connect_settings)
+                        if not quiet: pairprint('connected:  ' + str(lunique(errs)), ip)
+                        break;
+                except Exception as err:
+                        attempts += 1
+                        errs.append(str(err))
+        if connected == '':
+                # did not made connection
+                return(-1,{'login_errs': errs},timer)
+        else:
+                # connected
+                HANDLE = remote_conn.invoke_shell()
+                time.sleep(1.2)
+                init = HANDLE.recv(65535)
+                return(HANDLE,{'_': {'mgmt_login': timer_index_since(timer)}},timer)
+
+
+def AllCommands(buffering,commands,exit):
+        result = []
+        for cmds in [buffering, commands,exit]:
+                for a in cmds:
+                        result.append(a)
+        return(result)
+
+def run_commands(remote_conn, buffering, commands, ip, quiet, become, exit, settings_prompt, result):
+        timer = timer_index_start()
+        regexPrompt = re.compile('.*%s$' % settings_prompt)
+        closedPrompt = re.compile('.* closed.$')
+        passwordPrompt = re.compile('.*assword{:|: |}|assword')
+        commandIndex = 1
+        for command in list(AllCommands(buffering, commands, exit)):
+                output = ''
+                prompt_status = None; # PROMPT per command
+                cmdTime = timer_index_start()
+                if command in buffering: commandIndex = 0
+                index = str(commandIndex) + command
+                result[index] = []
+                # last thing was recv
+                remote_conn.send(command + '\n')
+                output = ''
+                time.sleep(.5)
+                if remote_conn.exit_status_ready() == True:
+                        time.sleep(1.5)
+                        # print('\n\n\n' + 'CLOSED\n\n')
+                        result[str(commandIndex) + command].append(bytes_str(remote_conn.recv(65535)))
+                        remote_conn.close()
+                        return(result)
+                while remote_conn.recv_ready() is False and remote_conn.exit_status_ready() is False:
+                        time.sleep(0.1)
+                # pairprint(ip + ' Ready/Sending', command)
+                while prompt_status == None:
+                        buff = ''
+                        while remote_conn.recv_ready():
+                                buff += bytes_str(remote_conn.recv(4096))
+                        output += buff
+                        time.sleep(0.1)
+                        if not quiet: print(output)
+                        if regexPrompt.search(output) != None:
+                                prompt_status = True
+                                break
+#                       elif closedPrompt.search(output) != None:
+#                               pairprint(closedPrompt.search(output), remote_conn.exit_status_ready())
+#                               prompt_status = True
+#                               break
+                        elif passwordPrompt.search(output) != None:
+                                prompt_status = True
+                                remote_conn.send(become + '\n')
+                                # output += wait(remote_conn, None, quiet, command, regexPrompt, passwordPrompt, closedPrompt, become)
+                                break
+                result[index].append(output)
+                result['_'][index] = timer_index_since(cmdTime)
+                commandIndex += 1
+                if not quiet: print(command)
+                else: print(ip,command,str(timer_index_since(cmdTime)))
+        return(result)
+
+
+def PARA_CMD_LIST(ip='', commands=[], username='', password='', become='', key_fname='', quiet=False, ping=True, windowing=True, settings_prompt='', buffering=[], exit=[], driver=''):
+    if windowing == False: return(NON_WINDOWING_PARAMIKO(ip, username, password, key_fname, commands))
+    remote_conn, result,mgmt_timer = mgmt_login(ip, username, password, become, key_fname, ping)
+    if remote_conn == -1: return(result)
+    if quiet: pairprint(ip, result)
+    result = run_commands(remote_conn, buffering, commands, ip, quiet, become, exit, settings_prompt, result)
+    result['_']['ALL'] = timer_index_since(mgmt_timer)
+    # if quiet: result['_']['ip'] = ip; jd(result['_'])
+    return(result)
 
 def time_epoch_human(myTime):
     # epoch = [10, 6, 3, 2]
