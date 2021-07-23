@@ -294,7 +294,7 @@ def flask_AIEngine():
 		paramiko_args['driver'] = settings['vendor']
 		paramiko_args['username'] = settings['username']
 		paramiko_args['ping'] = False
-		paramiko_args['quiet'] = False
+		paramiko_args['quiet'] = True
 		if 'buffering' in settings.keys(): paramiko_args['buffering'] = settings['buffering'].split(',')
 		if 'exit' in settings.keys():
 			for e in settings['exit'].split(','):
@@ -310,13 +310,15 @@ def flask_AIEngine():
 			elif 'json' in wc.cleanLine(cmd): 
 				# JUNIPER
 				# wc.jd(raw[cmd].split('\r\n')[0:-2])
-				raw[cmd] = '\n'.join(raw[cmd].split('\r\n')[0:-2])
+				raw[cmd] = '\n'.join(raw[cmd].split('\r\n')[1:-2])
 				try:
 					raw[cmd] = json.loads(raw[cmd])
-				except Exception:
+				except Exception as err:
+					print(raw[cmd])
 					raw[cmd] = raw[cmd].split('\n')
+					raw['_'] = str(err)
 			elif 'xml' in wc.cleanLine(cmd):
-				raw[cmd] = '\n'.join(raw[cmd].split('\r\n')[0:-2])
+				raw[cmd] = '\n'.join(raw[cmd].split('\r\n')[1:-2])
 				raw[cmd] = wc.xml_loads2(raw[cmd])
 			elif type(raw[cmd]) == dict: pass
 			else: raw[cmd] = raw[cmd].split('\r\n')

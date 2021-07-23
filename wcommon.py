@@ -1208,56 +1208,65 @@ def AllCommands(buffering,commands,exit):
         return(result)
 
 def run_commands(remote_conn, buffering, commands, ip, quiet, become, exit, settings_prompt, result):
-        timer = timer_index_start()
-        regexPrompt = re.compile('.*%s$' % settings_prompt)
-        closedPrompt = re.compile('.* closed.$')
-        passwordPrompt = re.compile('.*assword{:|: |}|assword')
-        commandIndex = 1
-        for command in list(AllCommands(buffering, commands, exit)):
-                output = ''
-                prompt_status = None; # PROMPT per command
-                cmdTime = timer_index_start()
-                if command in buffering: commandIndex = 0
-                index = str(commandIndex) + command
-                result[index] = []
-                # last thing was recv
-                remote_conn.send(command + '\n')
-                output = ''
-                time.sleep(.5)
-                if remote_conn.exit_status_ready() == True:
-                        time.sleep(1.5)
-                        # print('\n\n\n' + 'CLOSED\n\n')
-                        result[str(commandIndex) + command].append(bytes_str(remote_conn.recv(65535)))
-                        remote_conn.close()
-                        return(result)
-                while remote_conn.recv_ready() is False and remote_conn.exit_status_ready() is False:
-                        time.sleep(0.1)
-                # pairprint(ip + ' Ready/Sending', command)
-                while prompt_status == None:
-                        buff = ''
-                        while remote_conn.recv_ready():
-                                buff += bytes_str(remote_conn.recv(4096))
-                        output += buff
-                        time.sleep(0.1)
-                        if not quiet: print(output)
-                        if regexPrompt.search(output) != None:
-                                prompt_status = True
-                                break
-#                       elif closedPrompt.search(output) != None:
-#                               pairprint(closedPrompt.search(output), remote_conn.exit_status_ready())
-#                               prompt_status = True
-#                               break
-                        elif passwordPrompt.search(output) != None:
-                                prompt_status = True
-                                remote_conn.send(become + '\n')
-                                # output += wait(remote_conn, None, quiet, command, regexPrompt, passwordPrompt, closedPrompt, become)
-                                break
-                result[index].append(output)
-                result['_'][index] = timer_index_since(cmdTime)
-                commandIndex += 1
-                if not quiet: print(command)
-                else: print(ip,command,str(timer_index_since(cmdTime)))
-        return(result)
+	timer = timer_index_start()
+	regexPrompt = re.compile('.*%s$' % settings_prompt)
+	closedPrompt = re.compile('.* closed.$')
+	passwordPrompt = re.compile('.*assword{:|: |}|assword')
+	commandIndex = 1
+	for command in list(AllCommands(buffering, commands, exit)):
+		output = ''
+		prompt_status = None; # PROMPT per command
+		cmdTime = timer_index_start()
+		if command in buffering: commandIndex = 0
+		index = str(commandIndex) + command
+		result[index] = []
+		# last thing was recv
+		remote_conn.send(command + '\n')
+		output = ''
+		time.sleep(.5)
+		if remote_conn.exit_status_ready() == True:
+			time.sleep(1.5)
+			# print('\n\n\n' + 'CLOSED\n\n')
+			result[str(commandIndex) + command] = remote_conn.recv(65535).decode('utf-8')
+			remote_conn.close()
+			return(result)
+		while remote_conn.recv_ready() is False and remote_conn.exit_status_ready() is False:
+			time.sleep(0.1)
+		# pairprint(ip + ' Ready/Sending', command)
+		while prompt_status == None:
+			buff = ''
+			while remote_conn.recv_ready():
+				buff_bytes = remote_conn.recv(4096)
+				try:
+					buff += buff_bytes.decode('ascii')
+				except Exception:
+					try:
+						buff += buff_bytes.decode('utf-8')
+					except Exception:
+						print(buff_bytes)
+						buff += buff_bytes.decode('utf-8')
+			output += buff
+			time.sleep(0.1)
+			if not quiet: print(output)
+			if regexPrompt.search(output) != None:
+				prompt_status = True
+				break
+#		       elif closedPrompt.search(output) != None:
+#			       pairprint(closedPrompt.search(output), remote_conn.exit_status_ready())
+#			       prompt_status = True
+#			       break
+			elif passwordPrompt.search(output) != None and command in buffering:
+				pairprint('PASSWORD FOUND', command)
+				prompt_status = True
+				remote_conn.send(become + '\n')
+				# output += wait(remote_conn, None, quiet, command, regexPrompt, passwordPrompt, closedPrompt, become)
+				break
+		result[index] = output
+		result['_'][index] = timer_index_since(cmdTime)
+		commandIndex += 1
+		if not quiet: print(command)
+		else: print(ip,command,str(timer_index_since(cmdTime)))
+	return(result)
 
 
 def PARA_CMD_LIST(ip='', commands=[], username='', password='', become='', key_fname='', quiet=False, ping=True, windowing=True, settings_prompt='', buffering=[], exit=[], driver=''):
