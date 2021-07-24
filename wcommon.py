@@ -1602,8 +1602,8 @@ def AIEmulti(ip, settings, cmds):
 		if '1show interface all status' not in attempt.keys() or '2show port async all status' not in attempt.keys():
 			return({'attempt':attempt,'works':attempt,'intf':intf,'add':add})
 		eth = LX_formatter(attempt['1show interface all status'], 'Bound to')
-		intf = LX_formatter(attempt['2show port intf all status'], 'Port Number')
-		for e in eth.keys():
+		intf = LX_formatter(attempt['2show port async all status'], 'Port Number')
+		for e in list(eth.keys()):
 			if 'IP Address' in eth[e].keys(): add[eth[e]['IP Address']] = e; #IP=name
 			intf[e] = eth.pop(e)
 	else:
