@@ -186,9 +186,8 @@ def flask_validate():
 			try:
 				Mongo.MONGO._UPDATE(Mongo.validationDevice, {'uuid':uu}, DEVICE)
 			except Exception as err:
-				wc.jd(DEVICE)
-				print(err)
-				Mongo.MONGO._UPDATE(Mongo.validationDevice, {'uuid':uu}, DEVICE)
+				DEVICE['_err'] = str(err)
+				return(flask.jsonify(DEVICE))
 		# out.append(wc.validateITSM(repos, uuid, directory='../asset-data/', CIDR='10.88.0.0/16'))
 		out.append('runtime:' + str(wc.timer_index_since(validate)) + ' ms')
 		return(flask.jsonify(wc.lunique(out)))
