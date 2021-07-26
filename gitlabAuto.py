@@ -8,7 +8,7 @@ import requests
 import json
 import gitlab
 
-timer = wc.timer_index_start()
+# timer = wc.timer_index_start()
 class GITLAB():
 	def __init__(self, url, token, project):
 		pass
@@ -19,9 +19,8 @@ class GITLAB():
 		self.project = self.handle.projects.get(project)
 		# self.project = self.handle.projects.list()
 		# print(self.project)
-	def GetFiles(self, path):
+	def GetFiles(self, path, ref='master'):
 		results = {}
-		ref = 'master'
 		data = self.project.repository_tree(ref=ref, all=True)
 		for d in data:
 			try:

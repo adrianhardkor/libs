@@ -164,23 +164,30 @@ def flask_validate():
 		validate = wc.timer_index_start()
 		args,payload = flaskArgsPayload()
 		branch = args['branch']
+		if branch in ['master', 'main']: return(flask.jsonify({'DO NOT RUN ON': branch}))
 		uuid = ''
 		if 'uuid' in args.keys():  uuid = args['uuid']
-		master = wc.exec2('export GIT_SSH_COMMAND="ssh -i /opt/gitlab_root"; cd ../asset-data/; rm *.yml; git checkout master; git branch --set-upstream-to=origin/master master; git stash; git pull; ls;').split('\n')
-		wc.LoadMasterDevices4Duplicates('../asset-data/')
-		repos = wc.exec2('export GIT_SSH_COMMAND="ssh -i /opt/gitlab_root"; cd ../asset-data/; rm *.yml; git checkout %s; git branch --set-upstream-to=origin/%s %s; git stash; git pull; ls;' % (branch,branch,branch)).split('\n')
-		out = wc.lsearchAllInline('branch is', repos)
-		if out == []: return(flask.jsonify({'err':repos}))
-		repos = wc.exec2('cd ../asset-data/; ls -1;').split('\n')
+		# master = wc.exec2('export GIT_SSH_COMMAND="ssh -i /opt/gitlab_root"; cd ../asset-data/; rm *.yml; git checkout master; git branch --set-upstream-to=origin/master master; git stash; git pull; ls;').split('\n')
+		G = gitlabAuto.GITLAB('https://pl-acegit01.as12083.net/', 'hWfVZcD71VgDMcpzZhK7', 300)
+		wc.LoadMasterDevices4Duplicates('master', G); # /asset-data/
+		# repos = wc.exec2('export GIT_SSH_COMMAND="ssh -i /opt/gitlab_root"; cd ../asset-data/; rm *.yml; git checkout %s; git branch --set-upstream-to=origin/%s %s; git stash; git pull; ls;' % (branch,branch,branch)).split('\n')
+		# out = wc.lsearchAllInline('branch is', repos)
+		# if out == []: return(flask.jsonify({'err':repos}))
+		# repos = wc.exec2('cd ../asset-data/; ls -1;').split('\n')
 		# return(flask.jsonify({'master':master,'repos':repos,'Duplicates':wc.Duplicates, 'UUIDS': wc.UUIDS, 'cllis':wc.cllis}))
 		# out.append(repos)
-		VALIDATION = wc.validateITSM(repos, uuid, directory='../asset-data/', CIDR='10.88.0.0/16')
+
+		
+		VALIDATION = wc.validateITSM([], uuid, G, branch, CIDR='10.88.0.0/16')
 		Mongo.MONGO._DELETE(Mongo.validationDevice, criteria={'branch':branch}, force=True)
 		for uu in VALIDATION.keys():
 			if uu == 'runtime' or VALIDATION[uu] == 'runtime': continue
 			DEVICE = {'uuid':uu,'branch':branch,'valid':VALIDATION[uu]['valid']}
 			for blah in ['itsm','dcim','cable']:
-				DEVICE[blah] = VALIDATION[uu]['data'][blah]
+				try:
+					DEVICE[blah] = VALIDATION[uu]['data'][blah]
+				except Exception:
+					pass
 			for blah2 in ['timer','interfaces_to_cable']:
 				if blah2 in VALIDATION[uu].keys(): DEVICE[blah2] = str(VALIDATION[uu][blah2])
 			try:
@@ -189,8 +196,7 @@ def flask_validate():
 				DEVICE['_err'] = str(err)
 				return(flask.jsonify(DEVICE))
 		# out.append(wc.validateITSM(repos, uuid, directory='../asset-data/', CIDR='10.88.0.0/16'))
-		out.append('runtime:' + str(wc.timer_index_since(validate)) + ' ms')
-		return(flask.jsonify(wc.lunique(out)))
+		return(flask.jsonify({'runtime': str(wc.timer_index_since(validate)) + ' ms'}))
 
 def flask_runtimelogger():
 	@Mongo.MONGO.app.route('/runner', methods = ['POST', 'GET', 'PUT'])

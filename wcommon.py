@@ -25,6 +25,7 @@ import yaml
 import inspect
 import multiprocessing
 from functools import partial
+import gitlabAuto 
 
 urllib3.disable_warnings()
 
@@ -1435,7 +1436,15 @@ def MULTIPROCESS(funct, mylist, non_rotating_args, processes=5):
     return(results)
 
 
-
+def getScaffolding(data):
+	result = {}
+	for d in data.keys():
+		result[d.split('.')[0]] = {'itsm':{},'dcim':{},'cable':{}}
+		if data[d] == None: continue
+		for k in data[d].keys():
+			# if k.lower() in ['settings', 'ip']: result[d.split('.')[0]]['itsm'][k] = data[d][k]
+			result[d.split('.')[0]]['dcim'][k] = data[d][k]
+	return(result)
 
 def getFnameScaffolding(fname_list, uuid='', directory=''):
 	result = {}
@@ -1451,7 +1460,7 @@ def getFnameScaffolding(fname_list, uuid='', directory=''):
 	return(result)
 
 global cllis
-global Duplicates
+global MainDuplicates
 global UUIDS
 global validate
 
@@ -1524,11 +1533,21 @@ def validateSUB(devices, data, Duplicates, result, CIDR):
 			if itsm['ip'] in Duplicates.keys():
 				flag = False; # no AIE or PING
 				pairprint(device,Duplicates[itsm['ip']])
-				result[device]['valid'] = result[Duplicates[itsm['ip']]]['valid']
-				result[device]['valid']['itsm:duplicateIP'] = Duplicates[itsm['ip']]
-				result[Duplicates[itsm['ip']]]['valid']['itsm:duplicateIP'] = device
+				# print(result.keys())
+				try:
+					result[device]['valid'] = result[Duplicates[itsm['ip']]]['valid']
+				except Exception:
+					pass
+				try:
+					result[device]['valid']['itsm:duplicateIP'] = Duplicates[itsm['ip']]
+				except Exception:
+					pass
+				try:	
+					result[Duplicates[itsm['ip']]]['valid']['itsm:duplicateIP'] = device
+				except Exception:
+					pass
 			else:
-				Duplicates[itsm['ip']] = device; # add
+				Duplicates[itsm['ip']] = device; # add local branch
 				result[device]['valid']['itsm:duplicateIP'] = False
 			result[device]['valid']['itsm:ip in CIDR:' + CIDR.replace('.',' ')] = bool(itsm['ip'] in IP_get(CIDR)[1])
 
@@ -1630,32 +1649,43 @@ def LX_formatter(datalist, sortby):
 			if colum[0].strip() == sortby: sortedby = ':'.join(colum[1:]).strip()
 	return(result)
 
+#                        G = gitlabAuto.GITLAB('https://pl-acegit01.as12083.net/', headers['PRIVATE-TOKEN'], 300)
+#                        results = G.GetFiles('asset-data/')
 
 
-def LoadMasterDevices4Duplicates(path):
-	global Duplicates
+def LoadMasterDevices4Duplicates(ref, G):
+	global MainDuplicates
 	global cllis
 	global UUIDS
 	UUIDS = {}; # uu = DATA FROM YML
-	Duplicates = {}; # ip = device
+	MainDuplicates = {}; # ip = device
 	cllis = {}; # clli = master
-	for fname in exec2('ls -1 %s;' % path).split('\n'):
-		data = read_yaml(path + fname)
+	data1 = G.GetFiles('asset-data/', 'master')
+	for fname in data1.keys():
+		data = data1[fname]
 		if data == None: continue
 		for k in data.keys(): data[k.lower()] = data.pop(k) 		
-		if 'ip' in data.keys(): Duplicates[data['ip']] = fname.split('.')[0]
+		if 'ip' in data.keys(): MainDuplicates[data['ip']] = fname.split('.')[0]
 		if 'clli' in data.keys(): cllis[data['clli']] = 'master'
 		UUIDS[fname.split('.')[0]] = data
 
-def validateITSM(fname_list, uuid, directory='', CIDR='10.88.0.0/16'):
-	global Duplicates
+def validateITSM(fname_list, uuid, G, branch, CIDR='10.88.0.0/16'):
+	global MainDuplicates
 	result = {}
 	t = timer_index_start()
-	data = getFnameScaffolding(fname_list,uuid,directory=directory)
-	result,AIE_check = validateSUB(list(data.keys()), data, Duplicates, {}, CIDR)
+	# data = getFnameScaffolding(fname_list,uuid,directory=directory)
+	data = getScaffolding(G.GetFiles('asset-data/', branch))
+	result,AIE_check = validateSUB(list(data.keys()), data, MainDuplicates, {}, CIDR)
 	for per_setting in AIE_check.keys():
 		
-		cmds = json.loads(REST_GET('https://pl-acegit01.as12083.net/wopr/validateDCIM/raw/master/%s.j2' % per_setting.strip()))['response.body'].split('\n')
+		cmds = json.loads(REST_GET('https://pl-acegit01.as12083.net/wopr/validateDCIM/raw/master/%s.j2' % per_setting.strip()))
+		if 'response.body' not in cmds.keys():
+			for ip1 in AIE_check[per_setting].keys():
+				uuid1 = AIE_check[per_setting][ip1]
+				result[uuid1] = {'valid': {per_setting: "not in validateDCIM project .j2"}}
+			continue; # next setting/vendor/model
+		# jd(cmds)
+		cmds = cmds['response.body'].split('\n')
 		multi = MULTIPROCESS(AIEmulti, list(AIE_check[per_setting].keys()), {'settings':per_setting, 'cmds':cmds}, processes=8)
 		batchTime = multi.pop('timer')
 		for ip in multi.keys():
