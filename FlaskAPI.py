@@ -320,9 +320,9 @@ def flask_AIEngine():
 				raw[cmd] = '\n'.join(raw[cmd].split('\r\n')[1:-2])
 				try:
 					raw[cmd] = wc.xml_loads2(raw[cmd])
-				except Expection as err:
+				except Exception as err2:
 					raw[cmd] = raw[cmd].split('\n')
-					raw['_'] = str(err)
+					raw['_'] = str(err2)
 			elif type(raw[cmd]) == dict: pass
 			else: raw[cmd] = raw[cmd].split('\r\n')
 		return(flask.jsonify(raw)); # {'command': 'output'}
