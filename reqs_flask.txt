@@ -1,5 +1,6 @@
 flask-mongoengine
 flask-cors
 qrcode
+python-gitlab
 -e git+git://github.com/ojii/pymaging.git#egg=pymaging
 git+git://github.com/ojii/pymaging-png.git#egg=pymaging-png

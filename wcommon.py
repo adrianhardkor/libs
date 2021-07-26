@@ -1626,6 +1626,53 @@ def AIEmulti(ip, settings, cmds):
 		for e in list(eth.keys()):
 			if 'IP Address' in eth[e].keys(): add[eth[e]['IP Address']] = e; #IP=name
 			intf[e] = eth.pop(e)
+
+	elif settings == 'ruckus':
+		phys = {}
+		if '1show int' not in attempt.keys() or '2show mac-address all' not in attempt.keys():
+			return({'attempt':attempt,'works':attempt,'intf':intf,'add':add})
+		for line in attempt['1show int']:
+			cline = wc.cleanLine(line)
+			if len(cline) < 3: continue
+			# if '241' in line: print(line)
+			if cline[-4:-1] == ['line', 'protocol', 'is']:
+				interface = cline[-7]
+				flag = False
+				phys[wc.icx_interface_format(interface)] = interface
+				intf[interface] = {'status':'/'.join([cline[-5],cline[-1]])}
+			elif cline[2] == 'for':
+				intf[interface]['statusFor'] = line[13:].strip().replace('or', '').strip()
+			elif cline[0:2] == ['Hardware', 'is']:
+				intf[interface]['mac'] = cline[5]
+			elif cline[0:2] == ['Configured', 'speed']:
+				intf[interface]['speed'] = {'configured':cline[2], 'actual':cline[4]}
+				intf[interface]['duplex'] = {'configured': cline[7], 'actual':cline[9]}
+			elif cline[0:3] == ['Configured', 'mdi', 'mode']:
+				intf[interface]['mdi'] = {'configured': cline[3], 'actual':cline[5]}
+			elif 'port state is' in line:
+				segment2 = []
+				segment = line.split(',')
+				# print(segment)
+				for s in segment:
+					s = wc.cleanLine(s.strip())
+					segment2.append(s)
+				intf[interface]['vlan'] = {}
+				try:
+					intf[interface]['vlan'] = {'carrying num of vlans': int(segment2[0][3])}
+				except Exception:
+					if segment2[0][0:5] == ['Untagged', 'member', 'of', 'L2', 'VLAN']: intf[interface]['vlan']['access'] = segment2[0][-1]
+				intf[interface]['port state'] = cline[-1]
+			elif cline[0] == 'MACsec': intf[interface]['MACsec'] = cline[-1]
+			elif cline[0] == 'MTU': intf[interface]['MTU'] = cline[1]
+			elif cline[0:3] == ['Internet', 'address', 'is']:
+				intf[interface]['ip'] = {'ip': cline[3].split('/')[0], 'cidr':cline[3].split('/')[-1], 'network': wc.IP_get(cline[3])[0]}
+				add[cline[3].split('/')[0]] = interface
+		for mac in attempt['2show mac-address all']:
+			cmac = wc.cleanLine(mac)
+			if len(cmac) != 5: continue
+			if cmac[1] in phys.keys():
+				intf[phys[cmac[1]]]['arp'] = {'mac': cmac[0], 'type':cmac[2], 'vlan':cmac[3], 'action':cmac[4]}
+				# wc.pairprint(cmac, phys[cmac[1]])
 	else:
 		intf[settings] = add[settings] = 'not parsed'
 		works = "false_vendor_not_coded"
@@ -1664,7 +1711,7 @@ def LoadMasterDevices4Duplicates(ref, G):
 	for fname in data1.keys():
 		data = data1[fname]
 		if data == None: continue
-		for k in data.keys(): data[k.lower()] = data.pop(k) 		
+		for k in list(data.keys()): data[k.lower()] = data.pop(k) 		
 		if 'ip' in data.keys(): MainDuplicates[data['ip']] = fname.split('.')[0]
 		if 'clli' in data.keys(): cllis[data['clli']] = 'master'
 		UUIDS[fname.split('.')[0]] = data
