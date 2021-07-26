@@ -14,11 +14,14 @@ import Mongo; # shared_libs
 import time
 import paramiko
 import qrcode
-from qrcode.image.pure import PymagingImage
 import base64
 from io import BytesIO
 import lepton
 import gitlabAuto
+try:
+	from qrcode.image.pure import PymagingImage
+except Exception:
+	pass
 
 flaskIP = wc.cleanLine(wc.grep('10.88', wc.exec2('ifconfig')))[1]
 # wc.jd(wc.wcheader)
