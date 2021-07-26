@@ -1556,6 +1556,7 @@ def AIEmulti(ip, settings, cmds):
 	attempt = json.loads(REST_PUT('http://10.88.48.21:%s/aie?settings=%s&hostname=%s' % (str(argv_dict['port']), settings, ip), verify=False, convert_args=True, args={'cmd':cmds}))
 	if settings in ['juniper_junos','ndev']:
 		if '1show interfaces | display xml' not in attempt.keys(): return({'attempt':attempt,'works':attempt,'intf':intf,'add':add})
+		if type(attempt['1show interfaces | display xml']) == list: return({'attempt':attempt,'works':attempt,'intf':intf,'add':add})
 		if 'interface-information' not in attempt['1show interfaces | display xml']['rpc-reply'].keys(): return({'attempt':attempt,'works':attempt,'intf':intf,'add':add})
 		intfs = attempt['1show interfaces | display xml']['rpc-reply']['interface-information']
 		if type(intfs) != dict:
