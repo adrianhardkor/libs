@@ -1632,13 +1632,13 @@ def AIEmulti(ip, settings, cmds):
 		if '1show int' not in attempt.keys() or '2show mac-address all' not in attempt.keys():
 			return({'attempt':attempt,'works':attempt,'intf':intf,'add':add})
 		for line in attempt['1show int']:
-			cline = wc.cleanLine(line)
+			cline = cleanLine(line)
 			if len(cline) < 3: continue
 			# if '241' in line: print(line)
 			if cline[-4:-1] == ['line', 'protocol', 'is']:
 				interface = cline[-7]
 				flag = False
-				phys[wc.icx_interface_format(interface)] = interface
+				phys[icx_interface_format(interface)] = interface
 				intf[interface] = {'status':'/'.join([cline[-5],cline[-1]])}
 			elif cline[2] == 'for':
 				intf[interface]['statusFor'] = line[13:].strip().replace('or', '').strip()
@@ -1654,7 +1654,7 @@ def AIEmulti(ip, settings, cmds):
 				segment = line.split(',')
 				# print(segment)
 				for s in segment:
-					s = wc.cleanLine(s.strip())
+					s = cleanLine(s.strip())
 					segment2.append(s)
 				intf[interface]['vlan'] = {}
 				try:
@@ -1665,14 +1665,14 @@ def AIEmulti(ip, settings, cmds):
 			elif cline[0] == 'MACsec': intf[interface]['MACsec'] = cline[-1]
 			elif cline[0] == 'MTU': intf[interface]['MTU'] = cline[1]
 			elif cline[0:3] == ['Internet', 'address', 'is']:
-				intf[interface]['ip'] = {'ip': cline[3].split('/')[0], 'cidr':cline[3].split('/')[-1], 'network': wc.IP_get(cline[3])[0]}
+				intf[interface]['ip'] = {'ip': cline[3].split('/')[0], 'cidr':cline[3].split('/')[-1], 'network': IP_get(cline[3])[0]}
 				add[cline[3].split('/')[0]] = interface
 		for mac in attempt['2show mac-address all']:
-			cmac = wc.cleanLine(mac)
+			cmac = cleanLine(mac)
 			if len(cmac) != 5: continue
 			if cmac[1] in phys.keys():
 				intf[phys[cmac[1]]]['arp'] = {'mac': cmac[0], 'type':cmac[2], 'vlan':cmac[3], 'action':cmac[4]}
-				# wc.pairprint(cmac, phys[cmac[1]])
+				# pairprint(cmac, phys[cmac[1]])
 	else:
 		intf[settings] = add[settings] = 'not parsed'
 		works = "false_vendor_not_coded"
