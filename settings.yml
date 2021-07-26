@@ -12,7 +12,7 @@ juniper_junos:
   ansible_ssh_common_args: '-okexalgorithms=+diffie-hellman-group1-sha1 '
   vendor: 'juniper_junos'
   prompt: "([@]+[a-zA-Z0-9\.\-\_]+[>#%]+[ ])"
-  buffering: 'set cli screen-length 0'
+  buffering: 'set cli screen-length 0,'
   exit: "exit"
 ruckus:
   username: "admin"
@@ -35,7 +35,7 @@ ndev:
   ansible_ssh_common_args: '-okexalgorithms=+diffie-hellman-group1-sha1 '
   vendor: 'juniper_junos'
   prompt: "([@]+[a-zA-Z0-9\.\-\_]+[>#%]+[ ])"
-  buffering: 'set cli screen-length 0'
+  buffering: 'set cli screen-length 0,'
   exit: "exit"
 commscope:
   username: "root"
