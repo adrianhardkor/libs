@@ -1638,7 +1638,7 @@ def AIEmulti(ip, settings, cmds):
 			if cline[-4:-1] == ['line', 'protocol', 'is']:
 				interface = cline[-7]
 				flag = False
-				phys[icx_interface_format(interface)] = interface
+				phys[icx_intf_format(interface)] = interface
 				intf[interface] = {'status':'/'.join([cline[-5],cline[-1]])}
 			elif cline[2] == 'for':
 				intf[interface]['statusFor'] = line[13:].strip().replace('or', '').strip()
