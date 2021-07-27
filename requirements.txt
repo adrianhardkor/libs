@@ -21,6 +21,7 @@ pyyaml
 suds-py3
 xmltodict
 deepdiff
+gitlab
 python-gitlab
 flask_debug
 cffi

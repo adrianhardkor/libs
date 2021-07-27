@@ -1626,7 +1626,35 @@ def AIEmulti(ip, settings, cmds):
 		for e in list(eth.keys()):
 			if 'IP Address' in eth[e].keys(): add[eth[e]['IP Address']] = e; #IP=name
 			intf[e] = eth.pop(e)
-
+	elif settings == 'commscope':
+		if '1show ip interface brief' not in attempt.keys():
+			return({'attempt':attempt,'works':attempt,'intf':intf,'add':add})
+		for aline1 in attempt['1show ip interface brief']:
+			clean = wc.cleanLine(aline1)
+			if len(clean) != 5: continue
+			interface = ' '.join(clean[:2])
+			wc.pairprint(interface, clean)
+			add[clean[2].split('/')[0]] = interface
+			intf[interface] = {'ip': clean[2].split('/')[0], 'cidr':clean[2].split('/')[-1], 'status': '/'.join(clean[-2:])}
+	elif settings == 'gainspeed':
+		if '1show router route-table' not in attempt.keys() or '2show port' not in attempt.keys():
+			return({'attempt':attempt,'works':attempt,'intf':intf,'add':add})
+		index = 0
+		for aline2 in attempt['1show router route-table']:
+			clean = wc.cleanLine(aline2)
+			if '/' in clean[0]:
+				if clean[1:3] == ['Local', 'Local'] or clean[1:3] == ['Remote', 'Static']:
+					interface = wc.cleanLine(attempt['1show router route-table'][index + 1])[0]
+					# intf[interface] = {'ip': clean[0], 'type':clean[1], 'proto':clean[2]}
+					add[clean[0].split('/')[0]] = interface
+			index += 1
+		for aline2 in attempt['2show port']:
+			clean = wc.cleanLine(aline2)
+			if len(clean) < 1: continue
+			elif '/' not in clean[0]: continue
+			i = clean[0]
+			intf[i] = {'status':'/'.join([clean[1],clean[3]]), 'link':clean[2], 'mtu': {'cfg':clean[4], 'oper':clean[5]}, 'lag':clean[6], 'port mode':clean[7], 'port encap':clean[8], 'port type':clean[9]}
+			if len(clean) == 12: intf[i]['sfp'] = clean[10]
 	elif settings == 'ruckus':
 		phys = {}
 		if '1show int' not in attempt.keys() or '2show mac-address all' not in attempt.keys():
