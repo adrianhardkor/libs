@@ -309,10 +309,10 @@ def flask_AIEngine():
 				paramiko_args['commands'].append(e)
 			paramiko_args['exit'] = settings['exit'].split(',')
 		paramiko_args['settings_prompt'] = settings['prompt']
-		#try:
-		raw = wc.PARA_CMD_LIST(**paramiko_args)
-#		except Exception as err:
-#			return(flask.jsonify({'errFlask': str(err)}))
+		try:
+			raw = wc.PARA_CMD_LIST(**paramiko_args)
+		except Exception as err:
+			return(flask.jsonify({'errFlask': str(err)}))
 		for cmd in raw.keys():
 			if cmd == "_": pass
 			elif 'json' in wc.cleanLine(cmd): 
