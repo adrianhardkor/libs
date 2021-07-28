@@ -137,13 +137,13 @@ def flask_validated():
 			# main/master = INVENTORY PAGE DASHBOARD
 			G = gitlabAuto.GITLAB('https://pl-acegit01.as12083.net/', headers['PRIVATE-TOKEN'], 300)
 			results = G.GetFiles('asset-data/')
-			for disregard in ['.gitlab-ci.yml', 'online']:
+			for disregard in ['.gitlab-ci.yml', 'online', 'template.dcim.yml']:
 				if disregard in results.keys(): del results[disregard]
 			result = []
 			for kk in list(results.keys()):
 				try:
 					results[kk]['uuid'] = str(kk).split('.')[0]
-					results[kk]['GetInterfaceURL'] = 'ttps://10.88.48.21:5000/show_interfacesAIE?uuid=' + str(kk).split('.')[0]
+					results[kk]['GetInterfaceURL'] = 'http://10.88.48.21:5000/show_interfacesAIE?uuid=' + str(kk).split('.')[0]
 				except Exception:
 					pass
 				result.append(results[kk])
