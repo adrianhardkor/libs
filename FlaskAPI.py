@@ -142,7 +142,8 @@ def flask_validated():
 			result = []
 			for kk in list(results.keys()):
 				try:
-					results[kk]['uuid'] = str(kk)
+					results[kk]['uuid'] = str(kk).split('.')[0]
+					results[kk]['GetInterfaceURL'] = 'ttps://10.88.48.21:5000/show_interfacesAIE?uuid=' + str(kk).split('.')[0]
 				except Exception:
 					pass
 				result.append(results[kk])
