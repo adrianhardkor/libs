@@ -21,7 +21,7 @@ ruckus:
   vendor: 'ruckus'
   prompt: "([@]+[a-zA-Z0-9\.\-\_\ \(\)]+[>#%])"
   buffering: 'en,skip-page-display'
-  exit: "exit,exit"
+  exit: "exit"
 lx:
   username: "arcadmin"
   private_key_file: "/opt/lx.txt"
