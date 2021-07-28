@@ -140,7 +140,16 @@ def flask_validated():
 			for disregard in ['.gitlab-ci.yml', 'online', 'template.dcim.yml']:
 				if disregard in results.keys(): del results[disregard]
 			result = []
+			headers = []
+			for k3 in list(results.keys()):
+				if results[k3] == None: continue
+				for h in results[k3].keys():
+					headers.append(h)
+			headers = wc.lunique(headers)
 			for kk in list(results.keys()):
+				if results[kk] == None: continue
+				for hh in headers:
+					if hh not in results[kk].keys(): results[kk][hh] = ''
 				try:
 					results[kk]['uuid'] = str(kk).split('.')[0]
 					results[kk]['GetInterfaceURL'] = 'http://10.88.48.21:5000/show_interfacesAIE?uuid=' + str(kk).split('.')[0]
@@ -148,6 +157,7 @@ def flask_validated():
 					pass
 				result.append(results[kk])
 			# results['_'] = wc.timer_index_since(timer)
+			result = json.loads(json.dumps(result, sort_keys=True))
 			return(flask.jsonify(result))
 
 			results = []
