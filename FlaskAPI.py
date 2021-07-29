@@ -389,7 +389,7 @@ def flask_stcDash():
 			for port in s['ports'].keys():
 				p = s['ports'][port]
 				splitP = port.split('/')
-				pDATA = {'PortName':p['Location'], 'slotType': slotType, 'firmware':firmware, 'ownershipState': p['OwnershipState'], 'ownerUser':p['OwnerUser'], 'slotStatus':slotStatus,'top_inactive':[],'top_reserved':[]}
+				pDATA = {'PortName':p['Location'], 'slotType': slotType, 'firmware':firmware, 'ownershipState': p['OwnershipState'], 'ownerUser':p['OwnerUser'], 'slotStatus':slotStatus,'top_inactive':[],'top_reserved':[], 'uuid':wc.genUUID(identifyer=port)}
 				if STC + '||S' + splitP[3] + 'P' + splitP[4] in ResourceTopologies.keys():
 					for top in ResourceTopologies[STC + '||S' + splitP[3] + 'P' + splitP[4]].keys():
 						if ResourceTopologies[STC + '||S' + splitP[3] + 'P' + splitP[4]][top]['activeRes'] == {}:
