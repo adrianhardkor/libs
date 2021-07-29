@@ -373,25 +373,33 @@ def flask_stcDash():
 		V = velocity.VELOCITY(credsV[0], credsV[1], credsV[2])
 		ResourceTopologies = V.GetTopologiesByResource()
 		# return(flask.jsonify(ResourceTopologies))
-		for N12U in list(ResourceTopologies.keys()):
-			if N12U.startswith('N12U||') is False: ResourceTopologies.pop(N12U)
-			else: ResourceTopologies[N12U.split('|')[-1]] = ResourceTopologies.pop(N12U)
-		data,report = V.RunScript({}, 'TCC3/shared/stc_ports.py', parameters=[{'name':'python_parameter','value':args['chassis']}])
-		# wc.jd(data)
-		raw = json.loads(data['html_report'][-1][8:].replace('\\',''))
-		for attr in list(raw.keys()):
-			if type(raw[attr]) == dict:
-				if 'value' in raw[attr].keys(): raw[attr] = raw[attr]['value']
-		for p in list(raw['ports'].keys()):
-			for attr in list(raw['ports'][p].keys()):
-				if attr not in ['description', 'Port Type', 'Port Speed', 'isLocked', 'isReportedByDriver', 'linkChecked', 'lastModified']:
-					del raw['ports'][p][attr]
-					continue
-				if type(raw['ports'][p][attr]) == dict:
-					if 'value' in raw['ports'][p][attr].keys(): raw['ports'][p][attr] = raw['ports'][p][attr]['value']
-			if p in ResourceTopologies.keys():
-				raw['ports'][p]['Velocity_Topologies'] = ResourceTopologies[p]
-		return(flask.jsonify(  raw ))
+#		for N12U in list(ResourceTopologies.keys()):
+#			if N12U.startswith(args['chassis'] + '||') is False: ResourceTopologies.pop(N12U)
+#			else: ResourceTopologies[N12U.split('|')[-1]] = ResourceTopologies.pop(N12U)
+		data,report = V.RunScript({}, 'TCC3/shared/stc_ports2.py', parameters=[{'name':'python_parameter','value':args['chassis']}])
+		raw = json.loads(data['html_report'][-1][8:].replace('\\',''))['//' + args['chassis']]
+		STC = raw['PartNum'].split('-')[-1]
+
+		result = []
+		for slot in raw['slots'].keys():
+			s = raw['slots'][slot]
+			slotType = s['PartNum']
+			firmware = s['FirmwareVersion']
+			slotStatus = s['Status']
+			for port in s['ports'].keys():
+				p = s['ports'][port]
+				splitP = port.split('/')
+				pDATA = {'PortName':p['Location'], 'slotType': slotType, 'firmware':firmware, 'ownershipState': p['OwnershipState'], 'ownerUser':p['OwnerUser'], 'slotStatus':slotStatus,'top_inactive':[],'top_reserved':[]}
+				if STC + '||S' + splitP[3] + 'P' + splitP[4] in ResourceTopologies.keys():
+					for top in ResourceTopologies[STC + '||S' + splitP[3] + 'P' + splitP[4]].keys():
+						if ResourceTopologies[STC + '||S' + splitP[3] + 'P' + splitP[4]][top]['activeRes'] == {}:
+							pDATA['top_inactive'].append(top)
+						else: pDATA['top_reserved'].append(ResourceTopologies[STC + '||S' + splitP[3] + 'P' + splitP[4]][top])
+				result.append(pDATA)
+				
+		# result.append(list(ResourceTopologies.keys()))
+		return(flask.jsonify(result))
+
 
 # FLASK WEB-API
 def flask_default():
