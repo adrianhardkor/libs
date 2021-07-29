@@ -377,6 +377,7 @@ def flask_stcDash():
 			if N12U.startswith('N12U||') is False: ResourceTopologies.pop(N12U)
 			else: ResourceTopologies[N12U.split('|')[-1]] = ResourceTopologies.pop(N12U)
 		data,report = V.RunScript({}, 'TCC3/shared/stc_ports.py', parameters=[{'name':'python_parameter','value':args['chassis']}])
+		# wc.jd(data)
 		raw = json.loads(data['html_report'][-1][8:].replace('\\',''))
 		for attr in list(raw.keys()):
 			if type(raw[attr]) == dict:
