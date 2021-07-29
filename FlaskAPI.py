@@ -400,15 +400,17 @@ def flask_stcDash():
 		# result.append(list(ResourceTopologies.keys()))
 		return(flask.jsonify(result))
 
-# AIEmulti(ip, settings, cmds):
 def flask_show_interfacesAIE():
 	@Mongo.MONGO.app.route('/show_interfacesAIE', methods = ['GET'])
 	def show_interface_inner():
 		args,payload = flaskArgsPayload()
 		G = gitlabAuto.GITLAB('https://pl-acegit01.as12083.net/', 'hWfVZcD71VgDMcpzZhK7', 310)
 		results = G.GetFiles('/')
-		commands = results[args['settings'] + '.j2']
-		return(flask.jsonify({'args':args,'results':commands}))
+		commands = []
+		for c in results[args['settings'] + '.j2'].split('\n'):
+			if c != '': commands.append(c)
+			else: break
+		return(flask.jsonify({'args':args,'results':wc.AIEmulti(args['ip'], args['settings'], commands)}))
 	
 
 # FLASK WEB-API
