@@ -142,17 +142,17 @@ def flask_validated():
 			result = []
 			headers = []
 			for k3 in list(results.keys()):
-				if results[k3] == None: continue
+				if type(results[k3]) != dict: continue
 				for h in results[k3].keys():
 					headers.append(h)
 			headers = wc.lunique(headers)
 			for kk in list(results.keys()):
-				if results[kk] == None: continue
+				if type(results[kk]) != dict: continue
 				for hh in headers:
 					if hh not in results[kk].keys(): results[kk][hh] = ''
 				try:
 					results[kk]['uuid'] = str(kk).split('.')[0]
-					results[kk]['GetInterfaceURL'] = 'http://10.88.48.21:5000/show_interfacesAIE?uuid=' + str(kk).split('.')[0]
+					results[kk]['GetInterfaceURL'] = 'http://10.88.48.21:5000/show_interfacesAIE?ip=%s&settings=%s' % (results[kk]['ip'], results[kk]['settings'])
 				except Exception:
 					pass
 				result.append(results[kk])
@@ -360,7 +360,7 @@ def flask_leptonDash():
 		# return(flask.jsonify(V.CONNECTIONS))
 		data = lepton.FormatLeptonDashboard(L.INV)
 		for p in data.keys():
-			wc.pairprint(p, wc.lsearchAllInline2('lepton01_*', list(V.CONNECTIONS.keys())))
+			# wc.pairprint(p, wc.lsearchAllInline2('lepton01_*', list(V.CONNECTIONS.keys())))
 			if 'lepton01_' + str(p) in V.CONNECTIONS.keys():  data[p]['Velocity'] = V.CONNECTIONS['lepton01_' + p]
 		return(flask.jsonify(data))
 		# return(flask.jsonify(L.INV['ports']))
@@ -400,6 +400,16 @@ def flask_stcDash():
 		# result.append(list(ResourceTopologies.keys()))
 		return(flask.jsonify(result))
 
+# AIEmulti(ip, settings, cmds):
+def flask_show_interfacesAIE():
+	@Mongo.MONGO.app.route('/show_interfacesAIE', methods = ['GET'])
+	def show_interface_inner():
+		args,payload = flaskArgsPayload()
+		G = gitlabAuto.GITLAB('https://pl-acegit01.as12083.net/', 'hWfVZcD71VgDMcpzZhK7', 310)
+		results = G.GetFiles('/')
+		commands = results[args['settings'] + '.j2']
+		return(flask.jsonify({'args':args,'results':commands}))
+	
 
 # FLASK WEB-API
 def flask_default():
@@ -422,6 +432,7 @@ if  __name__ == "__main__":
 	flask_stcDash(); # stcDash
 	flask_RunJenkinsPipeline()
 	flask_qr(); # / qr
+	flask_show_interfacesAIE(); # /flask_show_interfacesAIE?uuid=
 	flask_runtimelogger(); # /runner
 	if 'port' in wc.argv_dict.keys():
 		Mongo.MONGO.app.run(debug=True, host=flaskIP, port=int(wc.argv_dict['port']))

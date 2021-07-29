@@ -1567,12 +1567,13 @@ def validateSUB(devices, data, Duplicates, result, CIDR):
 			#	result[device]['valid']['itsm:ip on the correct mgmt interface'] = 'FAILED TO VALIDATE MGMT INTERGFACE'
 	return(result,AIE_check)
 
-def AIEmulti(ip, settings, cmds):
+def AIEmulti(ip, settings, cmds, attempt=''):
 	# jd({'cmd':cmds})
 	intf = {}
 	add = {}
 	works = True
-	attempt = json.loads(REST_PUT('http://10.88.48.21:%s/aie?settings=%s&hostname=%s' % (str(argv_dict['port']), settings, ip), verify=False, convert_args=True, args={'cmd':cmds}))
+	if attempt == '':
+		attempt = json.loads(REST_PUT('http://10.88.48.21:%s/aie?settings=%s&hostname=%s' % (str(argv_dict['port']), settings, ip), verify=False, convert_args=True, args={'cmd':cmds}))
 	if settings in ['juniper_junos','ndev']:
 		if '1show interfaces | display xml' not in attempt.keys(): return({'attempt':attempt,'works':attempt,'intf':intf,'add':add})
 		if type(attempt['1show interfaces | display xml']) == list: return({'attempt':attempt,'works':attempt,'intf':intf,'add':add})

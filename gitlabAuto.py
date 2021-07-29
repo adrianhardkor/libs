@@ -23,22 +23,27 @@ class GITLAB():
 		results = {}
 		data = self.project.repository_tree(ref=ref, all=True)
 		for d in data:
-			try:
+			extension = d['name'].split('.')[-1].lower()
+			if extension in ['yaml', 'yml']:
 				# YAML
 				wc.log_fname(wc.bytes_str(self.project.repository_raw_blob(d['id'])), d['id'])
 				results[d['name']] = wc.read_yaml(d['id'])
 				wc.rmf(d['id'])
-			except Exception:
+				wc.pairprint(d['name'], 'yaml') 
+			elif extension == 'json':
+				# JSON
+				results[d['name']] = json.loads(wc.bytes_str(self.project.repository_raw_blob(d['id'])))
+				wc.pairprint(d['name'], 'json')
+			elif extension in ['j2', 'jinja', 'jinja2']:
+				results[d['name']] = wc.bytes_str(self.project.repository_raw_blob(d['id']))
+				wc.pairprint(d['name'],'j2')
+			else:
+				# REGULAR FILE
 				try:
-					# JSON
-					results[d['name']] = json.loads(self.project.repository_raw_blob(d['id']))
+					results[d['name']] = wc.bytes_str(self.project.repository_raw_blob(d['id'])).split('\n')
 				except Exception:
-					try:
-						# REGULAR FILE
-						results[d['name']] = self.project.repository_raw_blob(d['id']).split('\n')
-					except Exception:
-						# folder?
-						pass
+					pass
+				wc.pairprint(d['name'], 'line')
 
 		return(results)
 
