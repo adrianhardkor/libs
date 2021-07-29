@@ -134,6 +134,9 @@ def flask_validated():
 		if branch.lower() not in ['main', 'master']:
 			return(flask.jsonify(Mongo.MONGO._GETJSON(Mongo.validationDevice, criteria={'branch':branch})))
 		else:
+			credsV = wc.cleanLine(wc.read_file('/opt/velocity'))
+			V = velocity.VELOCITY(credsV[0], credsV[1], credsV[2])
+			VLITE = V.GetInventory(lite=True)
 			# main/master = INVENTORY PAGE DASHBOARD
 			G = gitlabAuto.GITLAB('https://pl-acegit01.as12083.net/', headers['PRIVATE-TOKEN'], 300)
 			results = G.GetFiles('asset-data/')
@@ -155,6 +158,14 @@ def flask_validated():
 					results[kk]['GetInterfaceURL'] = 'http://10.88.48.21:5000/show_interfacesAIE?ip=%s&settings=%s' % (results[kk]['ip'], results[kk]['settings'])
 				except Exception:
 					pass
+
+
+				# MONTIORING
+				try:
+					results[kk]['Manafacturer'] = str(VLITE[results[kk]['ip']]['isOnline'])
+				except Exception as err:
+					results[kk]['Manafacturer'] = str(err) + ' not in Velocity'
+
 				result.append(results[kk])
 			# results['_'] = wc.timer_index_since(timer)
 			result = json.loads(json.dumps(result, sort_keys=True))

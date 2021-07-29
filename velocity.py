@@ -642,12 +642,23 @@ class VELOCITY():
 			out[p['device2']['name']]['ports'][p['port2']['name']]['connections'][connection_name] = value
 		if out == {'Connections':'Only'}: return(self.CONNECTIONS)
 		return(out)
-	def GetInventory(self):
+	def GetInventory(self, lite=False):
 		self.DelAllMessages()
 		out = {}
 		self.top = VELOCITY.GetTopologies(self)
 		data = VELOCITY.REST_GET(self, '/velocity/api/inventory/v13/devices', params={'includeProperties':True, 'includePortGroups': True}, list_attr='devices')
-		# wc.jd(data)
+		if lite:
+			for d in data['devices']:
+				out[d['name']] = {}
+				properties = d.pop('properties')
+				for k in d.keys():
+					if type(d[k]) in [str, None, int, bool]: out[d['name']][k] = d[k]
+				for prop in properties:
+					out[d['name']][prop['name']] = prop['value']
+
+			for dd in list(out.keys()):
+				out[out[dd]['ipAddress']] = out[dd]
+			return(out)
 		for device in data['devices']:
 			out = self.FormatInventory(out, device)
 
