@@ -48,7 +48,7 @@ def notifyBuild(String buildStatus = 'STARTED') {
       }
     // Send notifications
     slackSend baseUrl: 'https://hooks.slack.com/services/', 
-    channel: 'arc-wopr', 
+    channel: 'wopr-jenkins-flask', 
     color: colorCode, 
     message: msg,
     teamDomain: 'https://wow-technology.slack.com', 
