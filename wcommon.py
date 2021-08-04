@@ -1739,7 +1739,7 @@ def LoadMasterDevices4Duplicates(ref, G):
 	data1 = G.GetFiles('asset-data/', 'master')
 	for fname in data1.keys():
 		data = data1[fname]
-		if data == None: continue
+		if type(data) != dict: continue
 		for k in list(data.keys()): data[k.lower()] = data.pop(k) 		
 		if 'ip' in data.keys(): MainDuplicates[data['ip']] = fname.split('.')[0]
 		if 'clli' in data.keys(): cllis[data['clli']] = 'master'
