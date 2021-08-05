@@ -10,7 +10,7 @@ node() {
     } finally {
         // Success or failure, always send notifications
         echo "I AM HERE"
-        notifyBuild(currentBuild.result)
+        // notifyBuild(currentBuild.result)
         echo currentBuild.result
     }
 }
